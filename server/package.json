@@ -1,0 +1,19 @@
+{
+  "name": "server",
+  "private": "true",
+  "version": "1.0.0",
+  "description": "Game server",
+  "main": "index.js",
+  "dependencies": {
+    "colors": "^1.1.2",
+    "dotenv": "^4.0.0",
+    "express": "^4.15.3",
+    "socket.io": "^2.0.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Harcharan Singh <artisangang@gmail.com>",
+  "license": "ISC"
+}

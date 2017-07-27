@@ -1,0 +1,53 @@
+html {
+	font-family:san-serif;
+}
+
+ body,ul {
+ 	margin:0;
+ 	padding:0;
+ 	
+ }
+
+ul {
+	list-style: none;
+}
+a {
+	text-decoration: none;
+}
+
+ app {
+    background: #d5d5d5;
+    float: left;
+    width: 100%;
+    height: 100%;
+    padding:20px;
+    box-sizing: border-box;
+    overflow: hidden;
+    position: absolute;
+    display:block;
+}
+
+.component {
+	float: left;
+	width: 100%;
+	background: #e7e7e7;
+	height: 100%;
+	box-sizing: border-box;
+	padding:20px;	
+	position: relative;
+	display:block;
+}
+
+/* components */
+
+.btn {
+	border: none;
+	padding: 10px;
+}
+
+group #list li {
+	padding: 10px 20px;
+	background: slategrey;
+	color:#fff;
+	border-bottom: 1px solid #ccc;
+}

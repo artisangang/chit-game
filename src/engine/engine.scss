@@ -1,0 +1,59 @@
+.animation {	
+	transition: all 0.5s ease-in;
+	left: 0;
+	top:0;
+	position: relative;
+}
+
+.animation.slide.left {
+	left:-100%;
+	opacity: 0.5;
+}
+
+.animation.slide.right {
+	left:100%;
+	opacity: 0.5;
+}
+
+
+.animation.slide.in.left, .animation.slide.in.right {
+	left: 0px;
+	opacity: 1;
+}
+
+.animation.slide.top {
+	top:-100%;
+	opacity: 0.5;
+}
+
+.animation.slide.bottom {
+	top:100%;
+	opacity: 0.5;
+}
+
+
+.animation.slide.in.top, .animation.slide.in.bottom {
+	top: 0px;
+	opacity: 1;
+}
+
+.animation.fade.fade-in {
+	opacity: 0.1;
+}
+
+.animation.fade.fade-out {
+	opacity: 0;
+}
+
+
+.animation.fade.in.fade-in {
+	opacity: 1;
+}
+
+
+
+
+
+.component.stacked {
+	display: none;
+}
