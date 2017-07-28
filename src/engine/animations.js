@@ -1,5 +1,5 @@
 const animations = {
-	slide: function slide(component, config) {
+	slide: function slide(component, config, reverse) {
 
 		let directions = ['left', 'right', 'top', 'bottom'];
 
@@ -9,18 +9,37 @@ const animations = {
 			throw new Error('Invalid direction in slide animation for component ' + component.constructor.name);
 		}
 
-		component.elementRef.classList.add('slide');
-		component.elementRef.classList.add( directions[directionIndex] );
-		component.elementRef.style.display = 'block';
+		if (typeof reverse != 'undefined') {
 
-		setTimeout(() => {			
-			//void component.elementRef.offsetWidth;
-			component.elementRef.classList.add('in');
-		}, 0);
+			component.elementRef.style.zIndex = 2;
+			component.elementRef.classList.add('slide');			
+			component.elementRef.classList.add( directions[directionIndex] );
+			
+
+			setTimeout(() => {			
+				//void component.elementRef.offsetWidth;
+				component.elementRef.classList.remove('in');
+				component.elementRef.classList.add('out');
+			}, 0);
+
+		} else {
+			component.elementRef.style.zIndex = 4;
+			component.elementRef.style.display = 'block';
+			component.elementRef.classList.add('slide');
+			component.elementRef.classList.add( directions[directionIndex] );		
+
+			setTimeout(() => {			
+				//void component.elementRef.offsetWidth;
+				component.elementRef.classList.add('in');
+			}, 0);
+
+		}
+
+		
 
 	},
 
-	fade: function fade(component, config) {
+	fade: function fade(component, config, reverse) {
 
 		let directions = ['fade-in', 'fade-out'];
 
@@ -30,20 +49,37 @@ const animations = {
 			throw new Error('Invalid effect in fade animation for component ' + component.constructor.name);
 		}
 
-		component.elementRef.classList.add('fade');
-		component.elementRef.classList.add( directions[directionIndex] );
-		component.elementRef.style.display = 'block';
+		if (typeof reverse != 'undefined') {
 
-		setTimeout(() => {			
-			//void component.elementRef.offsetWidth;
-			component.elementRef.classList.add('in');
-		}, 0);
+			component.elementRef.style.zIndex = 2;
+			component.elementRef.classList.add('fade');			
+			component.elementRef.classList.add( directions[directionIndex] );
+			
+
+			setTimeout(() => {			
+				//void component.elementRef.offsetWidth;
+				component.elementRef.classList.remove('in');
+				component.elementRef.classList.add('out');
+			}, 0);
+
+		} else {
+
+			component.elementRef.style.zIndex = 4;
+			component.elementRef.style.display = 'block';
+			component.elementRef.classList.add('fade');
+			component.elementRef.classList.add( directions[directionIndex] );
+			
+
+			setTimeout(() => {			
+				//void component.elementRef.offsetWidth;
+				component.elementRef.classList.add('in');
+			}, 0);
+		}
 
 	}
 };
 
-function animate(component, config) {
-
+function validateConfig(component, config) {
 	if (typeof config.key == 'undefined') {
 		throw new Error('Animation key is not defined for component ' + component.constructor.name);
 	}
@@ -55,6 +91,11 @@ function animate(component, config) {
 	if (typeof component.elementRef == 'undefined' || !(component.elementRef instanceof Node)) {
 		throw new Error('Invalid component or element reference is not provided for ' + component.constructor.name);
 	}
+}
+
+function animate(component, config) {
+
+	validateConfig(component, config);
 
 	component.elementRef.style.display = 'none';
 
@@ -68,4 +109,23 @@ function animate(component, config) {
 
 }
 
-export {animate};
+function  reverse(component, config) {
+
+	validateConfig(component, config);	
+
+	component.elementRef.classList.add('animation');
+
+	if (config.duration) {
+		component.elementRef.style.transitionDuration = config.duration;
+	}
+
+	animations[config.key](component, config, true);
+
+
+	setTimeout(() => {
+		component.elementRef.style.display = 'none';
+	}, parseFloat(config.duration.replace( /[^\d\.]*/g, '')) * 1000);
+	
+}
+
+export {animate,reverse};

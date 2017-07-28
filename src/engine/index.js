@@ -1,11 +1,11 @@
 import module from  './module.js';
 import component from  './component.js';
-import {boot,render} from  './bootstrap.js';
+import {boot,render,activate} from  './bootstrap.js';
 import animate from  './animate.js';
 
 import './engine.scss';
 
-export {component,module,boot,render,animate};
+export {component,module,boot,render,animate,activate};
 
 /*
 function requireAll(requireContext) {

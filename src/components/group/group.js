@@ -5,6 +5,9 @@ import template from './group.html';
 import {component} from 'engine';
 import {animate} from 'engine';
 
+import {activate} from 'engine';
+
+import join from '../join/join.js';
 
 @component({
 	selector:'group',
@@ -24,14 +27,17 @@ export default class group {
 	}	
 	
 	@animate({in: {
-		key:'slide',
-		from:'right',
+		key:'fade',
+		effect:'fade-in',
 		duration:'0.7s',
-	}, out:{}})
+	}, out:{
+		key:'fade',
+		effect:'fade-out',
+		duration:'0.5s'
+	}})
 
-	init() {
-		
-
+	init() {	
+	
 		
 	}
 
@@ -52,7 +58,7 @@ export default class group {
 
 	      let li = document.createElement('li');
 
-	      li.setAttribute('data-group', row.id);
+	      li.setAttribute('data-group', JSON.stringify(row));
 
 	      li.innerHTML = row.name;	
 
@@ -61,12 +67,20 @@ export default class group {
 	      listing.appendChild(li);  
 	  }
 
+
+
 	}
 
 
 	selectGroup(e) {
-			alert(e.target.getAttribute('data-group'));
+
+		console.log(join);
+
+		activate( join, 
+			JSON.parse( e.target.getAttribute('data-group') ) 
+			);
 	}
+
 
 	rendered() {
 

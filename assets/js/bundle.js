@@ -73,7 +73,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.animate = exports.render = exports.boot = exports.module = exports.component = undefined;
+exports.activate = exports.animate = exports.render = exports.boot = exports.module = exports.component = undefined;
 
 var _module2 = __webpack_require__(5);
 
@@ -98,6 +98,7 @@ exports.module = _module3.default;
 exports.boot = _bootstrap.boot;
 exports.render = _bootstrap.render;
 exports.animate = _animate2.default;
+exports.activate = _bootstrap.activate;
 
 /*
 function requireAll(requireContext) {
@@ -617,7 +618,7 @@ var _group = __webpack_require__(13);
 
 var _group2 = _interopRequireDefault(_group);
 
-__webpack_require__(17);
+__webpack_require__(19);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -677,6 +678,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.stacked = exports.destroy = exports.activate = exports.boot = undefined;
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _animations = __webpack_require__(8);
 
 var _initComponents = {};
@@ -686,12 +689,7 @@ function boot(com) {
 
 	document.addEventListener('DOMContentLoaded', function () {
 
-		var appEle = document.getElementsByTagName('app')[0];
-
-		if (appEle) {
-
-			activate(com.module.boot, appEle, true);
-		}
+		activate(com.module.boot, true);
 	}, false);
 }
 
@@ -701,7 +699,13 @@ function htmlToElement(html) {
 	return template.content.firstChild;
 }
 
-function activate(component, root, replace) {
+function activate(component, replace) {
+
+	var root = document.getElementsByTagName('app')[0];
+
+	if (!root) {
+		throw new Error('Root (<app>) is missing.');
+	}
 
 	var componentRef = htmlToElement(component.meta.template);
 
@@ -712,24 +716,46 @@ function activate(component, root, replace) {
 	// set element reference
 	componentObject.elementRef = componentRef;
 
-	// set current component as active component
-	_activeComponent = component;
+	// set params
+	if ((typeof replace === 'undefined' ? 'undefined' : _typeof(replace)) == 'object') {
+		componentObject.params = replace;
+		componentObject.param = function (key) {
+			return this.params[key];
+		};
+	}
 
 	// cal init component
 	componentObject.init();
 
-	if (replace) {
+	if (typeof replace == 'boolean' && replace == true) {
 		root.innerHTML = '';
 	}
 
 	componentRef.classList.add('component');
 
 	if (componentObject.animation) {
-		(0, _animations.animate)(componentObject, componentObject.animation.in || componentObject.animation);
-		root.appendChild(componentRef);
+
+		var timeout = 0;
+
+		if (_activeComponent) {
+
+			var duration = _activeComponent.instance.animation.out.duration || _activeComponent.instance.animation.in.duration || _activeComponent.instance.animation.duration || 250;
+
+			// component out
+			(0, _animations.reverse)(_activeComponent.instance, _activeComponent.instance.animation.out || _activeComponent.instance.animation.in || _activeComponent.instance.animation);
+			timeout = Number(parseFloat(duration.replace(/[^\d\.]*/g, ''))) * 1000;
+		}
+
+		setTimeout(function () {
+			// component in
+			(0, _animations.animate)(componentObject, componentObject.animation.in || componentObject.animation);
+		}, timeout);
 	}
 
 	root.appendChild(componentRef);
+
+	// set current component as active component
+	_activeComponent = component;
 
 	componentObject.rendered();
 }
@@ -767,7 +793,7 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 var animations = {
-	slide: function slide(component, config) {
+	slide: function slide(component, config, reverse) {
 
 		var directions = ['left', 'right', 'top', 'bottom'];
 
@@ -777,17 +803,31 @@ var animations = {
 			throw new Error('Invalid direction in slide animation for component ' + component.constructor.name);
 		}
 
-		component.elementRef.classList.add('slide');
-		component.elementRef.classList.add(directions[directionIndex]);
-		component.elementRef.style.display = 'block';
+		if (typeof reverse != 'undefined') {
 
-		setTimeout(function () {
-			//void component.elementRef.offsetWidth;
-			component.elementRef.classList.add('in');
-		}, 0);
+			component.elementRef.style.zIndex = 2;
+			component.elementRef.classList.add('slide');
+			component.elementRef.classList.add(directions[directionIndex]);
+
+			setTimeout(function () {
+				//void component.elementRef.offsetWidth;
+				component.elementRef.classList.remove('in');
+				component.elementRef.classList.add('out');
+			}, 0);
+		} else {
+			component.elementRef.style.zIndex = 4;
+			component.elementRef.style.display = 'block';
+			component.elementRef.classList.add('slide');
+			component.elementRef.classList.add(directions[directionIndex]);
+
+			setTimeout(function () {
+				//void component.elementRef.offsetWidth;
+				component.elementRef.classList.add('in');
+			}, 0);
+		}
 	},
 
-	fade: function fade(component, config) {
+	fade: function fade(component, config, reverse) {
 
 		var directions = ['fade-in', 'fade-out'];
 
@@ -797,19 +837,33 @@ var animations = {
 			throw new Error('Invalid effect in fade animation for component ' + component.constructor.name);
 		}
 
-		component.elementRef.classList.add('fade');
-		component.elementRef.classList.add(directions[directionIndex]);
-		component.elementRef.style.display = 'block';
+		if (typeof reverse != 'undefined') {
 
-		setTimeout(function () {
-			//void component.elementRef.offsetWidth;
-			component.elementRef.classList.add('in');
-		}, 0);
+			component.elementRef.style.zIndex = 2;
+			component.elementRef.classList.add('fade');
+			component.elementRef.classList.add(directions[directionIndex]);
+
+			setTimeout(function () {
+				//void component.elementRef.offsetWidth;
+				component.elementRef.classList.remove('in');
+				component.elementRef.classList.add('out');
+			}, 0);
+		} else {
+
+			component.elementRef.style.zIndex = 4;
+			component.elementRef.style.display = 'block';
+			component.elementRef.classList.add('fade');
+			component.elementRef.classList.add(directions[directionIndex]);
+
+			setTimeout(function () {
+				//void component.elementRef.offsetWidth;
+				component.elementRef.classList.add('in');
+			}, 0);
+		}
 	}
 };
 
-function animate(component, config) {
-
+function validateConfig(component, config) {
 	if (typeof config.key == 'undefined') {
 		throw new Error('Animation key is not defined for component ' + component.constructor.name);
 	}
@@ -821,6 +875,11 @@ function animate(component, config) {
 	if (typeof component.elementRef == 'undefined' || !(component.elementRef instanceof Node)) {
 		throw new Error('Invalid component or element reference is not provided for ' + component.constructor.name);
 	}
+}
+
+function animate(component, config) {
+
+	validateConfig(component, config);
 
 	component.elementRef.style.display = 'none';
 
@@ -833,7 +892,25 @@ function animate(component, config) {
 	animations[config.key](component, config);
 }
 
+function reverse(component, config) {
+
+	validateConfig(component, config);
+
+	component.elementRef.classList.add('animation');
+
+	if (config.duration) {
+		component.elementRef.style.transitionDuration = config.duration;
+	}
+
+	animations[config.key](component, config, true);
+
+	setTimeout(function () {
+		component.elementRef.style.display = 'none';
+	}, parseFloat(config.duration.replace(/[^\d\.]*/g, '')) * 1000);
+}
+
 exports.animate = animate;
+exports.reverse = reverse;
 
 /***/ }),
 /* 9 */
@@ -1018,6 +1095,10 @@ var _group4 = _interopRequireDefault(_group3);
 
 var _engine = __webpack_require__(0);
 
+var _join = __webpack_require__(17);
+
+var _join2 = _interopRequireDefault(_join);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -1055,10 +1136,14 @@ var group = (_dec = (0, _engine.component)({
 	selector: 'group',
 	template: _group4.default
 }), _dec2 = (0, _engine.animate)({ in: {
-		key: 'slide',
-		from: 'right',
+		key: 'fade',
+		effect: 'fade-in',
 		duration: '0.7s'
-	}, out: {} }), _dec(_class = (_class2 = function () {
+	}, out: {
+		key: 'fade',
+		effect: 'fade-out',
+		duration: '0.5s'
+	} }), _dec(_class = (_class2 = function () {
 	function group() {
 		var _this = this;
 
@@ -1097,7 +1182,7 @@ var group = (_dec = (0, _engine.component)({
 
 				var li = document.createElement('li');
 
-				li.setAttribute('data-group', row.id);
+				li.setAttribute('data-group', JSON.stringify(row));
 
 				li.innerHTML = row.name;
 
@@ -1111,7 +1196,10 @@ var group = (_dec = (0, _engine.component)({
 	}, {
 		key: 'selectGroup',
 		value: function selectGroup(e) {
-			alert(e.target.getAttribute('data-group'));
+
+			console.log(_join2.default);
+
+			(0, _engine.activate)(_join2.default, JSON.parse(e.target.getAttribute('data-group')));
 		}
 	}, {
 		key: 'rendered',
@@ -1182,10 +1270,135 @@ module.exports = "<group>\r\n\t<div class=\"container\">\r\n\t  <h5>Groups</h5>\
 /* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports.default = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _dec, _dec2, _class, _desc, _value, _class2;
+
+var _join = __webpack_require__(18);
+
+var _join2 = _interopRequireDefault(_join);
+
+var _engine = __webpack_require__(0);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
+	var desc = {};
+	Object['ke' + 'ys'](descriptor).forEach(function (key) {
+		desc[key] = descriptor[key];
+	});
+	desc.enumerable = !!desc.enumerable;
+	desc.configurable = !!desc.configurable;
+
+	if ('value' in desc || desc.initializer) {
+		desc.writable = true;
+	}
+
+	desc = decorators.slice().reverse().reduce(function (desc, decorator) {
+		return decorator(target, property, desc) || desc;
+	}, desc);
+
+	if (context && desc.initializer !== void 0) {
+		desc.value = desc.initializer ? desc.initializer.call(context) : void 0;
+		desc.initializer = undefined;
+	}
+
+	if (desc.initializer === void 0) {
+		Object['define' + 'Property'](target, property, desc);
+		desc = null;
+	}
+
+	return desc;
+}
+
+var join = (_dec = (0, _engine.component)({
+	selector: 'join',
+	template: _join2.default
+}), _dec2 = (0, _engine.animate)({ in: {
+		key: 'slide',
+		from: 'left',
+		duration: '0.5s'
+	}, out: {
+		key: 'slide',
+		to: 'right',
+		duration: '0.5s'
+	} }), _dec(_class = (_class2 = function () {
+	function join() {
+		_classCallCheck(this, join);
+	}
+
+	_createClass(join, [{
+		key: 'init',
+		value: function init() {
+			this.groupId = this.param('groupId');
+		}
+	}, {
+		key: 'joinGroup',
+		value: function joinGroup() {
+			var _this = this;
+
+			var input = this.elementRef.querySelector('.selectedGroup #user');
+			socket.emit('group.join', { user: input.value, groupID: this.groupId });
+			window.socket.on('group.join.response', function (e) {
+				_this.gorupJoined(e);
+			});
+		}
+	}, {
+		key: 'groupJoined',
+		value: function groupJoined(e) {
+
+			var _playerIdentity = JSON.parse(e);
+
+			/*var playerCounter = play.querySelector('#playersCount');
+     playerCounter.innerHTML = _playerIdentity.players.length;
+     // on new player
+   socket.on('player.in.'+_playerIdentity.group.id, function (data) {
+     var res = JSON.parse(data);
+     playerCounter.innerHTML = res.players.length;
+   });*/
+		}
+	}, {
+		key: 'rendered',
+		value: function rendered() {}
+	}, {
+		key: 'destroy',
+		value: function destroy() {
+			var _this2 = this;
+
+			window.socket.removeListener('group.join.response', function (e) {
+				_this2.gorupJoined(e);
+			});
+		}
+	}]);
+
+	return join;
+}(), (_applyDecoratedDescriptor(_class2.prototype, 'init', [_dec2], Object.getOwnPropertyDescriptor(_class2.prototype, 'init'), _class2.prototype)), _class2)) || _class);
+exports.default = join;
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports) {
+
+module.exports = "<style>\r\ngroup {display: none;}\r\n</style>\r\n<join>\r\n\t<div class=\"selectedGroup\">\r\n\t  <h5>Join</h5>\r\n\t    <form class=\"form-inline\" onsubmit=\"return false\">\r\n\t     <label>Name: <input id=\"user\" name=\"user\" class=\"input\" type=\"text\"></label>\r\n\t     <label><button class=\"button\" onclick=\"joinGroup()\">Join</button></label>\r\n\t   </form>\r\n\t</div>  \r\n</join>";
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(18);
+var content = __webpack_require__(20);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // Prepare cssTransformation
 var transform;
@@ -1210,7 +1423,7 @@ if(false) {
 }
 
 /***/ }),
-/* 18 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(1)(undefined);
